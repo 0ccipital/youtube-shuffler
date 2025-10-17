@@ -6,6 +6,7 @@ All data stored locally in ./cache and ./config
 
 import os
 import sys
+import time
 import random
 import socket
 import subprocess
@@ -1117,10 +1118,11 @@ class YouTubeShuffler:
                 video = self.videos[video_index]
                 
                 # Only fetch if we don't have a valid upload date
-                if video.get("upload_date") and len(video.get("upload_date", "")) == 8:
-                    return  # Already have good metadata
+                #if video.get("upload_date") and len(video.get("upload_date", "")) == 8:
+                #    return  # Already have good metadata
                 
-                self.logger.info("Fetching full metadata...")
+                self.logger.info("Fetching full metadata in 2 sec...")
+                time.sleep(2)
                 
                 # Fetch full metadata
                 metadata = self.fetch_video_metadata(video["url"])
