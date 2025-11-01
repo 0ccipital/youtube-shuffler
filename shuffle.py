@@ -1546,11 +1546,45 @@ class YouTubeShuffler:
             if os.path.exists(SOCKET_PATH):
                 os.remove(SOCKET_PATH)
 
+# TODO make into gui for compressing audio
+
+# For “sleep” listening with rowdy gaming channels (yells/laughs peaking way above normal speech), these chains work well:
+
+# Option A: Heavy leveling (2-stage compressor + limiter)
+
+# Smooth general leveling, plus a fast “catch the yells” stage, then a brickwall limiter.
+# Good when you want aggressive peak control without totally crushing intelligibility.
+
+# Use this in your start_mpv_instance args:
+# "--af=lavfi=[acompressor=threshold=-22dB:ratio=2.5:attack=10:release=350:makeup=4dB:knee=6:detection=rms:link=average],lavfi=[acompressor=threshold=-12dB:ratio=8:attack=2:release=120:makeup=0dB:knee=4:detection=peak:link=maximum],lavfi=[alimiter=limit=0.90:attack=5:release=50]"
+
+# Why these values:
+
+# Stage 1 (RMS detection): gentle leveling with slower release to avoid pumping.
+# Stage 2 (PEAK detection): fast clamp for shouts/laughs.
+# Limiter: 0.90 ceiling keeps headroom; adjust to 0.94 if it feels too soft.
+
+# Option B: Dynamic normalizer + limiter (rides dialog up, tames peaks)
+
+# If their mic balance varies a lot between speakers, this can be very comfy for sleep.
+
+# "--af=lavfi=[dynaudnorm=f=350:g=10:p=0.45:n=1],lavfi=[alimiter=limit=0.90:attack=5:release=40]"
+
+# Tips:
+
+# f=350 makes it react a bit slower (smoother), g=10 caps max boost so noise doesn’t rise too much, p=0.45 keeps things from getting too loud, n=1 couples channels to avoid stereo wobble.
+
+# Option C: Medium/transparent “always-on” + limiter
+
+# If A feels too squashed, try:
+
+# "--af=lavfi=[acompressor=threshold=-18dB:ratio=2.2:attack=8:release=250:makeup=2dB:knee=6:detection=rms:link=average],lavfi=[alimiter=limit=0.94:attack=5:release=50]"
             subprocess.Popen(
                 [
                     "mpv",
                     "--idle=yes",
                     "--force-window=yes",
+                    "--af=lavfi=[dynaudnorm=f=350:g=10:p=0.45:n=1],lavfi=[alimiter=limit=0.90:attack=5:release=40]",
                     f"--input-ipc-server={SOCKET_PATH}"
                 ],
                 preexec_fn=os.setsid,
